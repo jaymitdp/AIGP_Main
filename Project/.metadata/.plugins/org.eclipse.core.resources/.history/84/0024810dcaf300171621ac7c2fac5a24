@@ -1,0 +1,63 @@
+package com.aigp;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.sql.ResultSetMetaData;
+
+public class dbConnection {
+
+	private static String dbURL = "jdbc:derby://localhost:1527/AIGP;user=jaymitdp;password=derbyCon";
+	//private static String tableName = "patient";
+	private static Connection conn = null;
+	private static Statement stmt = null;
+	
+	public static void createConnection()
+	{
+		try {
+			Class.forName("org.apache.derby.jdbc.ClientDriver").newInstance();
+			conn = DriverManager.getConnection(dbURL);
+		}
+		catch(Exception ex)
+		{
+			ex.printStackTrace();
+		}
+	}
+	
+	public static void closeConnection()
+	{
+		try
+		{
+			if(stmt != null)
+			{
+				stmt.close();
+			}
+			if(conn != null) conn.close();
+		}
+		catch(Exception ex)
+		{
+			ex.printStackTrace();
+		}
+	}
+	
+	public static String selectPatient()
+	{
+		try {
+			stmt = conn.createStatement();
+			ResultSet results = stmt.executeQuery("select * from patient FETCH FIRST ROW ONLY");
+			ResultSetMetaData rsmd = results.getMetaData();
+			if(results.next())
+			{
+				return results.getString("patientName");
+			}
+		}
+		catch(Exception ex)
+		{
+			ex.printStackTrace();
+		}	
+		return new String("no data found");
+	}
+	
+}

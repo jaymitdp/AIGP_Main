@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://xmlns.jcp.org/xml/ns/javaee" xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee http://xmlns.jcp.org/xml/ns/javaee/web-app_3_1.xsd" version="3.1">
+  <display-name>AIGP</display-name>
+  <welcome-file-list>
+    <welcome-file>index</welcome-file>
+  </welcome-file-list>
+  <context-param>
+    <param-name>IdealGL_Weightage</param-name>
+    <param-value>5</param-value>
+  </context-param>
+  <context-param>
+    <param-name>maxIPD_Weightage</param-name>
+    <param-value>3</param-value>
+  </context-param>
+  <context-param>
+    <param-name>maxIPI_Weightage</param-name>
+    <param-value>4</param-value>
+  </context-param>
+  <context-param>
+    <param-name>SDL_Weightage</param-name>
+    <param-value>5</param-value>
+  </context-param>
+  <servlet>
+        <servlet-name>commonController</servlet-name>
+        <servlet-class>commonController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>commonController</servlet-name>
+        <url-pattern>/commonController</url-pattern>
+    </servlet-mapping>
+</web-app>

@@ -1,0 +1,160 @@
+<%@ page language="java" contentType="text/html; charset=ISO-8859-1"
+    pageEncoding="ISO-8859-1"%>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<title>Pump Configuration</title>
+<meta content='width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no' name='viewport'>
+    <link href="${pageContext.request.contextPath}/pumpLayout/bootstrap/css/bootstrap.min.css" rel="stylesheet" type="text/css" />
+    <link href="${pageContext.request.contextPath}/pumpLayout/plugins/font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css" />
+    <link href="${pageContext.request.contextPath}/pumpLayout/dist/css/AdminLTE.min.css" rel="stylesheet" type="text/css" />
+    <link href="${pageContext.request.contextPath}/pumpLayout/plugins/iCheck/square/blue.css" rel="stylesheet" type="text/css" />
+</head>
+<body class="register-page">
+    <div class="register-box">
+      <div class="register-logo">
+        <a href="doctorView.jsp"><b>AIGP</b></a>
+      </div>
+
+      <div class="register-box-body">
+        <form action="../../pumpConfiguration" method="post">
+        <div class="form-group has-feedback">
+            <input type="text" id="patientHeight" name="patientHeight" class="form-control"  value="${sessionScope.patientHeight}" placeholder="Patient Height in cm, 'ex: 180'"/>
+            <span class="glyphicon glyphicon-dashboard form-control-feedback"></span>
+          </div>
+          <div class="form-group has-feedback">
+            <input type="text"  id="patientWeight" name="patientWeight" class="form-control" value="${sessionScope.patientWeight}" placeholder="Patient Weight in kg, 'ex: 70'"/>
+            <span class="glyphicon glyphicon-dashboard form-control-feedback"></span>
+          </div>
+          <div class="form-group has-feedback">
+            <input type="text"  id="idealBloodGlucose" name="idealBloodGlucose" class="form-control" placeholder="Ideal blood glucose level : Reset Value"/>
+            <span class="glyphicon glyphicon-dashboard form-control-feedback"></span>
+          </div>
+          <div class="form-group has-feedback">
+            <input type="text"  id="maxInsulinDosagePerDay" name="maxInsulinDosagePerDay" class="form-control" placeholder="Maximum Insulin dosage/day : Reset Value"/>
+            <span class="glyphicon glyphicon-dashboard form-control-feedback"></span>
+          </div>
+          <div class="form-group has-feedback">
+            <input type="text" id="maxInsulinDosagePerInjection" name="maxInsulinDosagePerInjection" class="form-control" placeholder="Maximum Insulin dosage/injection : Reset Value"/>
+            <span class="glyphicon glyphicon-dashboard form-control-feedback"></span>
+          </div>
+          <div class="form-group has-feedback">
+            <input type="text" id="safeDosageLimit" name="safeDosageLimit" class="form-control" placeholder="Safe dosage limit : Reset Value"/>
+            <span class="glyphicon glyphicon-dashboard form-control-feedback"></span>
+          </div>
+          <div class="form-group has-feedback">
+            <input type="text" name="patientNextCheckUpDate" id="patientNextCheckUpDate" value="${sessionScope.nextCheckupDate}" class="form-control" placeholder="Next checkup date" data-inputmask="'DOB': 'dd.mm.yyyy'" data-mask/>
+            <span class="glyphicon glyphicon-calendar form-control-feedback"></span>
+          </div>
+          <div class="form-group has-feedback">
+           <label>
+           	  <input id="patientManualModeAccess" type="hidden" value="${sessionScope.patientManualModeAccess}"/>
+              <input id="isPatientManualModeAccess" type="checkbox" name="isPatientManualModeAccess" value="isPatientManualModeAccess" class="flat-red"/> Is patient allowed to access manual mode?
+			</label>
+           </div>
+          <div class="row">
+            <div class="pull-center">
+              <button id="saveStateBtn" type="submit" class="btn btn-block btn-primary btn-lg" disabled><i id="saveState" class="fa fa-fw fa-lock"></i>Save</button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <script src="${pageContext.request.contextPath}/pumpLayout/plugins/jQuery/jQuery-2.1.4.min.js"></script>
+    <script src="${pageContext.request.contextPath}/pumpLayout/bootstrap/js/bootstrap.min.js" type="text/javascript"></script>
+    <script src="${pageContext.request.contextPath}/pumpLayout/plugins/iCheck/icheck.min.js" type="text/javascript"></script>
+    <script src="${pageContext.request.contextPath}/pumpLayout/plugins/input-mask/jquery.inputmask.js" type="text/javascript"></script>
+    <script src="${pageContext.request.contextPath}/pumpLayout/plugins/input-mask/jquery.inputmask.date.extensions.js" type="text/javascript"></script>
+    <script src="${pageContext.request.contextPath}/pumpLayout/plugins/input-mask/jquery.inputmask.extensions.js" type="text/javascript"></script>
+    <script>
+      $(function () {
+        $('input').iCheck({
+          checkboxClass: 'icheckbox_square-blue',
+          radioClass: 'iradio_square-blue',
+          increaseArea: '20%'
+        });
+        
+        $('#patientHeight').focusout(function() {
+        	if(!$.isNumeric($(this).val()))
+        	{
+        		$(this).val('');
+        		$(this).focus();
+        	}
+        });
+        
+        $('#patientWeight').focusout(function() {
+        	if(!$.isNumeric($(this).val()))
+        	{
+        		$(this).val('');
+        		$(this).focus();
+        	}
+        });
+        
+        //patientdob date mask
+        $("#patientdob").inputmask("dd.mm.yyyy", {"placeholder": "dd.mm.yyyy"});
+        
+        $('#idealBloodGlucose').focusout(function() {
+        	saveLockToggle();
+        });
+        $('#maxInsulinDosagePerDay').focusout(function() {
+        	saveLockToggle();
+        });
+        $('#maxInsulinDosagePerInjection').focusout(function() {
+        	saveLockToggle();
+        });
+        $('#safeDosageLimit').focusout(function() {
+        	saveLockToggle();
+        });
+        
+        //var MMvalue = $("#patientManualModeAccess").val();
+        /* if(MMvalue=="true")
+			{
+        		$('#isPatientManualModeAccess').attr("checked",true);
+			}
+        else{
+        	$('#isPatientManualModeAccess').removeAttr('checked');
+        } */
+       
+      function saveLockToggle(){
+    	  
+    	var idealGL = $('#idealBloodGlucose').val();
+		var maxIPD = $('#maxInsulinDosagePerDay').val();
+      	var maxIPI = $('#maxInsulinDosagePerInjection').val();
+      	var SDL = $('#safeDosageLimit').val();
+    	 
+      	if(idealGL != "" && maxIPD != "" && maxIPI != "" && SDL != "")
+      	{
+	      	$.ajax({
+	  			url : '../../pumpConfiguration',
+	  			data : {
+	  				saveToggle : true,
+	  				idealGL : idealGL,
+	  				maxIPD : maxIPD,
+	  	      		maxIPI : maxIPI,
+	  	      		SDL : SDL
+	  			},
+	  			success : function(result) {
+	  				if(result == "0")
+	  					{
+		  					$('#saveState').removeClass("fa fa-fw fa-unlock").addClass("fa fa-fw fa-lock");
+		  	  				$('#saveStateBtn').prop("disabled", true);
+	  					}
+	  				if(result == "1")
+  					{
+	  					$('#saveState').removeClass("fa fa-fw fa-lock").addClass("fa fa-fw fa-unlock");
+	  	  				$('#saveStateBtn').prop("disabled", false);
+  					}
+	  			}
+	  		});
+      	}
+      	else{
+      		$('#saveState').removeClass("fa fa-fw fa-unlock").addClass("fa fa-fw fa-lock");
+			$('#saveStateBtn').prop("disabled", true);
+      	}
+      }
+      });
+    </script>
+  </body>
+</html>

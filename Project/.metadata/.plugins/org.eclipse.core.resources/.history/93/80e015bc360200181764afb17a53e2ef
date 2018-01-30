@@ -1,0 +1,481 @@
+<%@ page language="java" contentType="text/html; charset=ISO-8859-1"
+    pageEncoding="ISO-8859-1"%>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>AIGP</title>
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<meta content='width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no' name='viewport'>
+    <!-- Bootstrap 3.3.4 -->
+    <link href="${pageContext.request.contextPath}/pumpLayout/bootstrap/css/bootstrap.min.css" rel="stylesheet" type="text/css" />    
+    <!-- FontAwesome 4.3.0 -->
+    <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet" type="text/css" />
+    <!-- FontAwesome 4.7.0 -->
+    <link href="${pageContext.request.contextPath}/pumpLayout/plugins/font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css" />
+	<!-- Ionicons 2.0.0 -->
+    <link href="https://code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css" rel="stylesheet" type="text/css" />    
+    <!-- Theme style -->
+    <link href="${pageContext.request.contextPath}/pumpLayout/dist/css/AdminLTE.min.css" rel="stylesheet" type="text/css" />
+    <link href="${pageContext.request.contextPath}/pumpLayout/dist/css/skins/_all-skins.min.css" rel="stylesheet" type="text/css" />
+    <!-- iCheck -->
+    <link href="${pageContext.request.contextPath}/pumpLayout/plugins/iCheck/flat/blue.css" rel="stylesheet" type="text/css" />
+    <!-- Wizard -->
+    <link href="${pageContext.request.contextPath}/pumpLayout/plugins/wizard/easyWizard.css" rel="stylesheet" type="text/css" />
+</head>
+<body class="skin-black-light sidebar-mini">
+    <div class="wrapper">
+      <header class="main-header">
+       <nav class="navbar" role="navigation">
+          <div class="navbar-custom-menu" style="width:100%;">
+            <ul class="nav navbar-nav"  style="width:100%;">
+			  <li class="dropdown user user-menu" style="width:12%;">
+                <a href="lockScreen.jsp">
+                  <img src="${pageContext.request.contextPath}/pumpLayout/dist/img/AIGP.png" class="user-image" alt="User Image"/>
+                </a>
+              </li>
+              <li class="dropdown messages-menu" title="Needs replacement on or before : 01.01.2018 ${sessionScope.needleReplacementDate}">
+                <a href="#" class="dropdown-toggle" data-toggle="modal" data-target="#needleWizard">
+                  <!-- <i class="fa fa-syringe"></i> -->
+				  <img src="${pageContext.request.contextPath}/pumpLayout/dist/img/syringe1.png" width="16" height="16" class="user-image" alt="Syringe" />
+                  <span class="label label-danger" id="needleAlert"></span>
+                </a>
+              </li>
+              <li class="dropdown notifications-menu" title="Available reservior level in %, read user manual for more info." style="width:14%">
+                <a href="#" class="dropdown-toggle"  data-toggle="modal" data-target="#reserviorWizard">
+                  <i class="fa fa-fw fa-flask"></i>
+                  <span class="label label-success" id="reserviorAlert"></span>
+                </a>
+              </li>
+              <li class="dropdown tasks-menu" title="Available battery level in %, read user manual for more info." style="width:14%">
+                <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                  <i id="batteryLeftIcon" class="fa fa-battery-full"></i>
+                  <span class="label label-success" id="batteryLeft"></span>
+                </a>
+              </li>
+			   <li class="dropdown messages-menu">
+                <a id="currentTime" href="#" class="dropdown-toggle" data-toggle="dropdown"></a>
+              </li>
+              <li>
+                <a id="currentDate" href="#"></a>
+              </li>
+              <li class="dropdown user user-menu" style="width:10%">
+                <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+				<i class="fa fa-gears"></i></a>
+				<ul class="dropdown-menu">
+                  <li class="user-header">
+                    <p>
+                      <c:if test="${sessionScope.patientName}!=''"><small>${sessionScope.patientName}</small><br/></c:if>
+                      <c:if test="${sessionScope.patientWeight}!=''"><small>Weight : ${sessionScope.patientWeight} kg</small><br/></c:if>
+                      <c:if test="${sessionScope.patientHeight}!=''"><small>Height : ${sessionScope.patientHeight} cm</small><br/></c:if>
+                      <c:if test="${sessionScope.patientDOB}!=''"><small>Date of birth : ${sessionScope.patientDOB}</small><br/></c:if>
+                      <c:if test="${sessionScope.lastCheckupDate}!=''"><small>Last checkup date : ${sessionScope.lastCheckupDate}</small><br/></c:if>
+                      <c:if test="${sessionScope.nextCheckupDate}!=''"><small>Next checkup date : ${sessionScope.nextCheckupDate}</small><br/></c:if>
+                    </p>
+                  </li>
+                  <li class="user-body">
+                  	<div class="pull-left">
+                      <a href="help.jsp" class="btn btn-default btn-flat"><i class="fa fa-info-circle"> Help</i></a>
+                    </div>
+                    <div class="pull-right">
+                      <a href="patientEditProfile.jsp" class="btn btn-default btn-flat"><i class="fa fa-edit"> Profile</i></a>
+                    </div>
+                  </li>
+                </ul>
+              </li>
+            </ul>
+          </div>
+        </nav>
+      </header>
+      
+      <div class="content-wrapper">
+       <section class="content">
+          <div class="row">
+			<div class="col-xs-12">
+              <div class="box box-primary">
+                <div class="box-header with-border">
+                  <i class="fa fa-bar-chart-o"></i>
+                  <small class="box-title">Blood Glucose</small>
+                  <div class="box-tools pull-right"> 
+                    <small class="box-title">Manual Mode</small>
+                    <div class="btn-group" id="ManualMode" data-toggle="btn-toggle">
+                      <input id="patientManualModeAccess" type="hidden" value="${sessionScope.patientManualModeAccess}"/>
+                      <button id="manualModeOnBtn" type="button" class="btn btn-default btn-xs" data-toggle="on">On</button>
+                      <button type="button" class="btn btn-default btn-xs active" data-toggle="off">Off</button>
+                    </div>
+                  </div>
+                </div>
+                <div class="box-body">
+                  <div id="bloodGlucoseGraph" style="height: 365px; width:100%;"></div>
+                </div>
+				</div>
+				<div class="box box-primary" id="manualInputBox">
+                <div class="box-body pad table-responsive">
+                  <table class="table table-bordered text-center">
+                    <tr  id="SaveBtn">
+                    <td>
+                    <div class="input-group input-group-sm">
+	                    <input id="carbIntake" type="text" class="form-control" placeholder="Units of carbohydrate intake">
+	                    <span class="input-group-btn">
+	                      <button id="carbIntakeBtn" class="btn btn-info btn-flat" disabled type="button">Save</button>
+	                    </span>
+                  	</div>
+                  	</td>
+                    </tr>
+                    <tr  id="injectBtn" style="display: none;">
+	                 <td>
+	                 <div class="input-group input-group-sm">
+	                    <input id="insulinIntake" type="text" class="form-control" placeholder="Units of insulin to intake">
+	                    <span class="input-group-btn">
+	                      <button id="insulinIntakeBtn" class="btn btn-warning btn-flat" disabled type="button">Inject</button>
+	                    </span>
+                  	 </div>
+                    </td>
+                    </tr>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+
+	<div class="modal fade" id="reserviorWizard" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="myModalLabel">Refill Reservior</h4>
+                </div>
+                <div class="modal-body wizard-content">
+                    <div class="wizard-step">
+                        Step 1 <br>
+                        Safely remove the reservior from the pump. 
+                  </div>
+                    <div class="wizard-step">
+                        Step 2 <br>
+                        Refill the reservior.
+                  </div>
+                    <div class="wizard-step">
+                        Step 3 <br>
+                       Safely place the reserior in the pump.
+                    </div>
+                </div>
+                <div class="modal-footer wizard-buttons">
+                    <!-- The wizard button will be inserted here. -->
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="modal fade" id="needleWizard" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="myModalLabel">Needle Replacement</h4>
+                </div>
+                <div class="modal-body wizard-content">
+                    <div class="wizard-step">
+                        Step 1 <br>
+                        Safely remove the needle. 
+                  </div>
+                    <div class="wizard-step">
+                        Step 2 <br>
+                        Prepare new needle.
+                  </div>
+                    <div class="wizard-step">
+                        Step 3 <br>
+                       Safely insert the needle.
+                    </div>
+                </div>
+                <div class="modal-footer wizard-buttons">
+                    <!-- The wizard button will be inserted here. -->
+                </div>
+            </div>
+        </div>
+    </div> 
+
+    <!-- jQuery 2.1.4 -->
+    <script src="${pageContext.request.contextPath}/pumpLayout/plugins/jQuery/jQuery-2.1.4.min.js"></script>
+    <!-- jQuery UI 1.11.2 -->
+    <script src="http://code.jquery.com/ui/1.11.2/jquery-ui.min.js" type="text/javascript"></script>
+    <!-- Resolve conflict in jQuery UI tooltip with Bootstrap tooltip -->
+    <script>
+      $.widget.bridge('uibutton', $.ui.button);
+    </script>
+    <!-- Bootstrap 3.3.2 JS -->
+    <script src="${pageContext.request.contextPath}/pumpLayout/bootstrap/js/bootstrap.min.js" type="text/javascript"></script>    
+    <!-- jQuery Knob Chart -->
+    <script src="${pageContext.request.contextPath}/pumpLayout/plugins/knob/jquery.knob.js" type="text/javascript"></script>
+    <!-- AdminLTE App -->
+    <script src="${pageContext.request.contextPath}/pumpLayout/dist/js/app.min.js" type="text/javascript"></script>    
+    <script type="text/javascript" src="${pageContext.request.contextPath}/pumpLayout/plugins/canvasjs/canvasjs.min.js"></script>
+    <script type="text/javascript" src="${pageContext.request.contextPath}/pumpLayout/plugins/wizard/easyWizard.js"></script>
+	<script type="text/javascript">
+		
+	  	var chart;
+	  	var date = new Date();
+		var dd = date.getDate();
+		var mm = date.getMonth() + 1;
+		var yyyy = date.getFullYear();
+		var hh = date.getHours();
+		var MM = date.getMinutes();
+		if(dd < 10)
+		{
+			dd = '0' + dd;
+		}
+		if(mm < 10)
+		{
+			mm = '0' + mm;
+		}
+		if(MM < 10)
+		{
+			MM = '0' + MM;
+		}
+		document.getElementById("currentDate").innerHTML = '<small style="font-weight:bold; font-size:13px;">' + dd + '.' + mm + '.' + yyyy + '</small>';
+		document.getElementById("currentTime").innerHTML = '<large style="font-weight:bold; font-size:24px;">' + hh + ':' + mm + '</large>';
+		
+      $(function () {
+		
+    	$("#needleWizard").wizard();
+	    $("#reserviorWizard").wizard();
+    	var limit = 100;
+  		var y = 0;
+  		var data = [];
+  		var dataSeries = { type: "line", xValueType:"string", name: "Current Blood Glucose", showInLegend: true};
+  		var glucoseData = sessionStorage.getItem("glucoseData");
+  		var dataPoints = [];
+  		
+  		dataSeries.dataPoints = dataPoints;
+  		data.push(dataSeries); 
+	
+	  	function generateBloodGlucose(updateData){
+	  		$.ajax({
+	  	        url: '../../glucoseSimulator',
+	  	      data : {
+	  	    	glucoseSeeker : true
+	  			},
+	  	        success: function(result) {
+	  	        	if(result != "")
+	  	        	{
+	  	        		updateData(JSON.stringify(result));
+	  	        	}
+	  	        }
+	  	    });
+	      }
+  	
+	  	var updateData = function(glucoseData)
+		{
+      		glucoseData = glucoseData.replace(/['{]+/g, '');
+	        glucoseData = glucoseData.replace(/['"]+/g, '');
+	        glucoseData = glucoseData.replace(/['}]+/g, '');
+			var partedString = glucoseData.split(',');
+			var t,g, tEnd, gStart;
+			var gData = [];
+			for(var i = 0; i < partedString.length; i++)
+				{
+					tEnd = partedString[i].lastIndexOf(':');
+					gStart = tEnd + 1;
+					t = partedString[i].substr(0, tEnd);
+					g = partedString[i].substr(gStart,partedString[i].length);
+					gData.push({x: t, y: parseInt(g)});
+					//dataPoints.push({x: t, y: parseInt(g)});
+				}
+				dataSeries.dataPoints = gData;
+				chart.data[0].options.name = "Current Blood Glucose : "+ g;
+				/* chart.options.axisX.viewportMinimum = t-20;
+	  			chart.options.axisX.viewportMaximum = t; */
+	  			chart.render();
+		}
+	  	
+  		var interval = setInterval(function(){
+  			generateBloodGlucose(updateData);
+  		}, 1000);
+  		
+    	  chart = new CanvasJS.Chart("bloodGlucoseGraph", {
+    			animationEnabled: true,
+    			zoomEnabled: true,
+    			panEnabled: true,
+    			exportFileName: "patientGlucoseReport",
+    			exportEnabled: false,
+    			title:{
+    				text: "" 
+    			},
+    			legend: {
+    				cursor: "pointer",
+    				verticalAlign: "top",
+    				horizontalAlign: "center",
+    				dockInsidePlotArea: true,
+    				itemclick: true
+    			},
+    			axisX :{
+    				title: "Time(S)",
+    				titleFontSize : 12,
+    				valueFormatString: "#",
+    				minimum: 0,
+      				viewportMinimum: 0,
+      		        viewportMaximum: 50
+      		      	/* labelFormatter: function (e) {
+      				return CanvasJS.formatDate( e.value, "HH:mm:ss");
+      				}, */
+      			},
+    			axisY :{
+    				includeZero:false,
+    				titleFontSize : 12,
+    				title: "Blood Glucose(mg/dl)"
+    			},
+    			data: data
+    		});
+    	  $('.canvasjs-chart-credit').hide();
+    	  chart.render();
+    	  
+    	  if(glucoseData != "")
+    		{
+    			updateData(glucoseData);
+    		}
+    		
+    	 
+    	  function toggleManualMode(value)
+     	 {
+     		if(value=="false")
+  			{
+  				//$('#manualModeOnBtn').hide();
+  				$('#manualModeOnBtn').attr("disabled", "disabled");
+  			}
+ 	 		else{
+ 	 			//$('#manualModeOnBtn').show();
+ 	 			$('#manualModeOnBtn').removeAttr("disabled");
+ 	 		}
+     	 }
+    	  
+    	  $('#carbIntake').focusout(function() {
+          	if($(this).val() != "" && !$.isNumeric($(this).val()))
+          	{
+          		$(this).val('');
+          		$(this).focus();
+          	}
+          	if($(this).val() != ""){
+          		$('#carbIntakeBtn').prop("disabled", false);
+          	}
+          	else{
+          		$('#carbIntakeBtn').prop("disabled", true);
+          	}
+          });
+          
+          $('#insulinIntake').focusout(function() {
+          	if($(this).val() != "" && !$.isNumeric($(this).val()))
+          	{
+          		$(this).val('');
+          		$(this).focus();
+          	}
+          	if($(this).val() != ""){
+          		$('#insulinIntakeBtn').prop("disabled", false);
+          	}
+          	else{
+          		$('#insulinIntakeBtn').prop("disabled", true);
+          	}
+          });
+    	  
+    	  $("#patientManualModeAccess").change(function() {
+    		  toggleManualMode($(this).val());
+    		});
+         
+    	 toggleManualMode($("#patientManualModeAccess").val());
+    	 
+    	 alterBatteryIcon();
+    	 
+    	 if(parent.devframeR.document.getElementById('chargeLeftInput').value != "")
+    	 {
+    		 var batteryLeftPercentage = parseInt(parent.devframeR.document.getElementById('chargeLeftInput').value);
+        	 $('#batteryLeft').html(batteryLeftPercentage + "%");
+    	 }
+    	 
+    	 if(parent.devframeR.document.getElementById('reserviorLeftInput').value != "")
+    	 {
+    		 var reserviorLeftPercentage = parseInt(parent.devframeR.document.getElementById('reserviorLeftInput').value);
+        	 $('#reserviorAlert').html(reserviorLeftPercentage + "%");
+    	 }
+    	 
+    	 $('#batteryLeft').on('DOMSubtreeModified',function(){
+    		 alterBatteryIcon();
+    		});
+    	 
+    	 function alterBatteryIcon()
+    	 {
+    	    var batteryLeftPercentage = parseInt(parent.devframeR.document.getElementById('chargeLeftInput').value);
+    	    var isChargingOn = parent.devframeR.document.getElementById('isChargingOn').checked;
+    	  	
+   		  	if(batteryLeftPercentage != "")
+	   		   {
+	   			if(!isChargingOn && batteryLeftPercentage <= 75 && batteryLeftPercentage > 50)
+	   			{
+	   			$('#batteryLeftIcon').removeClass("fa fa-battery-full").addClass("fa fa-battery-three-quarters");
+	   			$('#batteryLeft').removeClass("label label-success").addClass("label label-info");
+	   			}
+	   			else if(!isChargingOn && batteryLeftPercentage <= 50 && batteryLeftPercentage > 20)
+				{
+				  $('#batteryLeftIcon').removeClass("fa fa-battery-three-quarters").addClass("fa fa-battery-half");
+				  $('#batteryLeft').removeClass("label label-info").addClass("label label-warning");
+				}
+	   			else if(!isChargingOn && batteryLeftPercentage <= 20 && batteryLeftPercentage > 5)
+				{
+				  $('#batteryLeftIcon').removeClass("fa fa-battery-half").addClass("fa fa-battery-quarter");
+				  $('#batteryLeft').removeClass("label label-warning").addClass("label label-danger");
+				}
+	   			else if(!isChargingOn && batteryLeftPercentage <= 5)
+				{
+				  $('#batteryLeftIcon').removeClass("fa fa-battery-quarter").addClass("fa fa-battery-empty");
+				}
+	   			else if(isChargingOn && batteryLeftPercentage > 5 && batteryLeftPercentage <= 20)
+	   			{
+	   				$('#batteryLeftIcon').removeClass("fa fa-battery-empty").addClass("fa fa-battery-quarter");
+	   			}
+	   			else if(isChargingOn && batteryLeftPercentage > 20 && batteryLeftPercentage <= 50)
+	   			{
+	   				  $('#batteryLeftIcon').removeClass("fa fa-battery-quarter").addClass("fa fa-battery-half");
+					  $('#batteryLeft').removeClass("label label-danger").addClass("label label-warning");
+	   			}
+	   			else if(isChargingOn && batteryLeftPercentage > 50 && batteryLeftPercentage <= 75)
+	   			{
+	   				  $('#batteryLeftIcon').removeClass("fa fa-battery-half").addClass("fa fa-battery-three-quarters");
+					  $('#batteryLeft').removeClass("label label-warning").addClass("label label-info");
+	   			}
+	   			else if(isChargingOn && batteryLeftPercentage > 75)
+	   			{
+	   				  $('#batteryLeftIcon').removeClass("fa fa-battery-three-quarters").addClass("fa fa-battery-full");
+					  $('#batteryLeft').removeClass("label label-info").addClass("label label-success");
+	   			}
+   			}
+    	 }
+    	 
+    	 
+        //Manual mode TOGGLE
+        $("#ManualMode .btn").click(function () {
+          if ($(this).data("toggle") === "on") {
+        	  $('#bloodGlucoseGraph').height("325px");
+        	  $('#injectBtn').show();
+        	  chart.render();
+          }
+          else {
+        	  $('#injectBtn').hide();
+        	  $('#bloodGlucoseGraph').height("365px");
+        	  chart.render();
+          }
+        });
+      });
+      
+      if($('.modal-dialog') != null)
+      {
+        $('.modal-dialog').css("margin-top", "100px");	  
+      }
+          
+      function labelFormatter(label, series) {
+        return "<div style='font-size:13px; text-align:center; padding:2px; color: #fff; font-weight: 600;'>"
+                + label
+                + "<br/>"
+                + Math.round(series.percent) + "%</div>";
+      }
+    </script>
+</body>
+</html>

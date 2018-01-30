@@ -1,0 +1,9 @@
+INDEX VERSION 1.4+F:\HIS\SCS\Insulin Pump\Project\.metadata\.plugins\org.eclipse.wst.jsdt.core\indexes
+3784730062.index
+3548543015.index
+2595410721.index
+743035069.index
+3010581750.index
+1758625786.index
+1758625786.index
+2298548477.index

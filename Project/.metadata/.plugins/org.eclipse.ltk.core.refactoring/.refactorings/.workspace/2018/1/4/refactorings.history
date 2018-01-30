@@ -1,0 +1,3 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session version="1.0">&#x0A;<refactoring comment="Delete resource &apos;MatlabConnection&apos;" deleteContents="false" description="Delete resource &apos;MatlabConnection&apos;" element1="/MatlabConnection" flags="7" id="org.eclipse.ltk.core.refactoring.delete.resources" resources="1" stamp="1516652828213"/>&#x0A;<refactoring comment="Delete resource &apos;MiniPID&apos;" deleteContents="true" description="Delete resource &apos;MiniPID&apos;" element1="/MiniPID" flags="7" id="org.eclipse.ltk.core.refactoring.delete.resources" resources="1" stamp="1516652838316"/>
+</session>

@@ -1,0 +1,170 @@
+package com.aigp.entities;
+
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+
+public class ContinousGlucoseGenerator{
+	public HashMap<Integer, Double> bloodGlucoseData;
+	public BloodGlucoseCurrentState bloodGlucoseCurrentState;
+	public double maxChangeInBloodGlucose;
+	public double bloodGlucose;
+	public double idealBloodGlucoseLevel;
+	public double carbIntake;
+	private Runnable glucoseReadingTimer;
+	private Thread bloodGlucoseGeneratorTask;
+	private static ContinousGlucoseGenerator continousGlucoseGenerator;
+	//private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+	
+	enum BloodGlucoseCurrentState{
+		INCREASING,
+		DECREASING,
+		STEADY
+	}
+	
+	private ContinousGlucoseGenerator()
+	{
+		bloodGlucoseData = new HashMap<Integer, Double>();
+		Patient patient = Patient.getInstance();
+		PumpConfig pumpConfig = PumpConfig.getInstance();
+		this.idealBloodGlucoseLevel = pumpConfig.idealBloodGlucoseLevel;
+		this.bloodGlucose = patient.patientCurrentBloodGlucose;
+		this.bloodGlucoseCurrentState = BloodGlucoseCurrentState.STEADY;
+	}
+	
+	public void initiateGlucoseGeneratorTimer()
+	{
+		glucoseReadingTimer = new glucoseGeneratorTimer();
+		bloodGlucoseGeneratorTask = new Thread(glucoseReadingTimer);
+		bloodGlucoseGeneratorTask.start();
+	}
+	
+	public static ContinousGlucoseGenerator getInstance()
+	{
+		if(continousGlucoseGenerator == null)
+		{
+			continousGlucoseGenerator = new ContinousGlucoseGenerator();
+		}
+		return continousGlucoseGenerator;
+	}
+	
+	public BloodGlucoseCurrentState getBloodGlucoseCurrentState() {
+		return bloodGlucoseCurrentState;
+	}
+
+	public void setBloodGlucoseCurrentState(BloodGlucoseCurrentState bloodGlucoseCurrentState) {
+		this.bloodGlucoseCurrentState = bloodGlucoseCurrentState;
+		if(this.bloodGlucoseCurrentState != BloodGlucoseCurrentState.STEADY)
+		{
+			this.idealBloodGlucoseLevel = PumpConfig.getInstance().idealBloodGlucoseLevel;
+		}
+	}
+	
+	public double getMaxChangeInBloodGlucose() {
+		return maxChangeInBloodGlucose;
+	}
+
+	public void setMaxChangeInBloodGlucose(double maxChangeInBloodGlucose) {
+		this.maxChangeInBloodGlucose = maxChangeInBloodGlucose;
+	}
+
+	public double getbloodGlucose() {
+		return bloodGlucose;
+	}
+
+	public void setbloodGlucose(double bloodGlucose) {
+		this.bloodGlucose = bloodGlucose;
+	}
+
+	public double getIdealBloodGlucoseLevel() {
+		return idealBloodGlucoseLevel;
+	}
+
+	public void setIdealBloodGlucoseLevel(double idealBloodGlucoseLevel) {
+		this.idealBloodGlucoseLevel = idealBloodGlucoseLevel;
+	}
+
+	public double getCarbIntake() {
+		return carbIntake;
+	}
+
+	public void setCarbIntake(double carbIntake) {
+		this.carbIntake = carbIntake;
+	}
+
+	public Runnable getGlucoseReadingTimer() {
+		return glucoseReadingTimer;
+	}
+
+	public void setGlucoseReadingTimer(Runnable glucoseReadingTimer) {
+		this.glucoseReadingTimer = glucoseReadingTimer;
+	}
+
+	public Thread getBloodGlucoseGeneratorTask() {
+		return bloodGlucoseGeneratorTask;
+	}
+
+	public void setBloodGlucoseGeneratorTask(Thread bloodGlucoseGeneratorTask) {
+		this.bloodGlucoseGeneratorTask = bloodGlucoseGeneratorTask;
+	}
+	
+	public HashMap<Integer, Double> getBloodGlucoseData() {
+		return bloodGlucoseData;
+	}
+	public void setBloodGlucoseData(HashMap<Integer, Double> bloodGlucoseData) {
+		this.bloodGlucoseData = bloodGlucoseData;
+	}
+	public static ContinousGlucoseGenerator getContinousGlucoseMonitor() {
+		return continousGlucoseGenerator;
+	}
+	public static void setContinousGlucoseMonitor(ContinousGlucoseGenerator continousGlucoseMonitor) {
+		ContinousGlucoseGenerator.continousGlucoseGenerator = continousGlucoseMonitor;
+	}
+
+	class glucoseGeneratorTimer implements Runnable{
+		
+		private ContinousGlucoseGenerator continousGlucoseGenerator = ContinousGlucoseGenerator.getInstance();
+		private PumpConfig pumpConfig = PumpConfig.getInstance();
+		private int timeLapsed = 0;
+		//private final DateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
+	@Override
+	public synchronized void run() {
+		while(true)
+		{
+	       	try {
+	       	   if(continousGlucoseGenerator.bloodGlucoseCurrentState == BloodGlucoseCurrentState.INCREASING && bloodGlucose > 120 && bloodGlucose < maxChangeInBloodGlucose)
+	 	       {
+	       		   bloodGlucose = bloodGlucose + (carbIntake/100);
+	 	       }
+	       	   if(continousGlucoseGenerator.bloodGlucoseCurrentState == BloodGlucoseCurrentState.INCREASING && bloodGlucose >= maxChangeInBloodGlucose && !pumpConfig.isManualModeOn)
+	       	   {
+	       		   continousGlucoseGenerator.bloodGlucoseCurrentState = BloodGlucoseCurrentState.DECREASING;
+	       		   pumpConfig.insulinConsumed = pumpConfig.insulinConsumed + 5;
+	       		   pumpConfig.ReserviorLevel = pumpConfig.ReserviorLevel - 5;
+	       	   }
+	       	   if(continousGlucoseGenerator.bloodGlucoseCurrentState == BloodGlucoseCurrentState.DECREASING && bloodGlucose > idealBloodGlucoseLevel)
+	       	   {
+	       		   bloodGlucose = bloodGlucose - (5 * (carbIntake/100));
+	       	   }
+	 	       if(continousGlucoseGenerator.bloodGlucoseCurrentState == BloodGlucoseCurrentState.STEADY)
+	 	       {
+	 	    	   //bloodGlucoseData.put(dateFormat.format(new Date()), preMealBloodGlucose);
+	 	    	  //bloodGlucoseData.put(new Date().getTime(), bloodGlucose);
+	 	       }
+	 	       	timeLapsed = timeLapsed + 1;
+	 	       	bloodGlucoseData.put(timeLapsed, bloodGlucose);
+				Thread.sleep(1000);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+	    }
+	}
+	}
+	
+}

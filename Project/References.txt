@@ -1,0 +1,7 @@
+References SCS:
+
+Easy Wizard : "http://st3ph.github.io/jquery.easyWizard/"
+FontAwesome : "http://fontawesome.io/icons/"
+Theme : "https://adminlte.io/"
+CanvasJS : "https://canvasjs.com/"
+Adobe Spark: https://spark.adobe.com

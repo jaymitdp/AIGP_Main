@@ -1,0 +1,5 @@
+package com.aigp.entities;
+
+public class BloodGlucoseData {
+	
+}

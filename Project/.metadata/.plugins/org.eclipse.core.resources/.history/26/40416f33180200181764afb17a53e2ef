@@ -1,0 +1,60 @@
+package com.aigp;
+
+import java.io.IOException;
+import java.text.DecimalFormat;
+
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import com.aigp.entities.ContinousGlucoseGenerator;
+import com.google.gson.*;
+
+/**
+ * Servlet implementation class glucoseSimulator
+ */
+@WebServlet("/glucoseSimulator")
+public class glucoseSimulator extends HttpServlet {
+	private static final long serialVersionUID = 1L;
+       
+    /**
+     * @see HttpServlet#HttpServlet()
+     */
+    public glucoseSimulator() {
+        super();
+        // TODO Auto-generated constructor stub
+    }
+
+	/**
+	 * @see HttpServlet#doGet(HttpServletRequest request, HttpServletResponse response)
+	 */
+	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		// TODO Auto-generated method stub
+		String glucoseSeeker = request.getParameter("glucoseSeeker");
+		if(glucoseSeeker != null && glucoseSeeker.equals(String.valueOf(true)))
+		{
+			//response.setContentType("text/plain");
+			//response.setContentType("application/json");
+			/*Double bloodGlucose = Math.random() * ((120 - 50) + 50);
+			DecimalFormat f = new DecimalFormat("##");*/
+			Gson data = new Gson();
+			ContinousGlucoseGenerator continousGlucoseGenerator = ContinousGlucoseGenerator.getInstance();
+			continousGlucoseGenerator.bloodGlucoseData;
+			//response.getWriter().write(""+f.format(bloodGlucose)+"");
+			response.setContentType("application/json");
+		    response.setCharacterEncoding("UTF-8");
+			response.getWriter().write(data.toJson(array));
+		}
+	}
+
+	/**
+	 * @see HttpServlet#doPost(HttpServletRequest request, HttpServletResponse response)
+	 */
+	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		// TODO Auto-generated method stub
+		doGet(request, response);
+	}
+
+}
