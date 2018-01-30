@@ -275,7 +275,7 @@
 						g = partedString[i].substr(gStart,partedString[i].length);
 						g = parseFloat(parseFloat(g).toFixed(2));
 						
-						if(g > 120 || g < 85)
+						if(g > 120 || g < 70)
 						{
 							bloodGlucoseUnsafeAlert.play();	
 							chart.options.theme = "dark1";

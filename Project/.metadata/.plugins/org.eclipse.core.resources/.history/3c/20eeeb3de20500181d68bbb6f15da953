@@ -3,8 +3,8 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html>
 <head>
+<title>AIGP</title>
 <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
-<title>Home</title>
 <meta content='width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no' name='viewport'>
     <link href="${pageContext.request.contextPath}/pumpLayout/bootstrap/css/bootstrap.min.css" rel="stylesheet" type="text/css" />    
     <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet" type="text/css" />
@@ -28,15 +28,16 @@
               </li>
               <li class="dropdown messages-menu" id="needleTitle" title="Needs replacement on or before : 01.01.2018">
                 <a href="#" class="dropdown-toggle" data-toggle="modal" data-target="#needleWizard">
-                  <!-- <i class="fa fa-syringe"></i> -->
-				  <img src="${pageContext.request.contextPath}/pumpLayout/dist/img/syringe1.png" width="16" height="16" class="user-image" alt="Syringe" />
+                  <img src="${pageContext.request.contextPath}/pumpLayout/dist/img/syringe1.png" width="16" height="16" class="user-image" alt="Syringe" />
                   <span class="label label-danger" id="needleAlert"></span>
                 </a>
               </li>
               <li class="dropdown notifications-menu" title="Available reservior level in units, read user manual for more info." style="width:12%">
                 <a href="#" class="dropdown-toggle"  data-toggle="modal" data-target="#reserviorWizard">
                   <i class="fa fa-fw fa-flask"></i>
-                  <span class="label label-success" id="reserviorAlert"></span>
+                  <span class="label label-success" id="reserviorAlert">
+                  <small id="reserviorAlertVal"></small>
+                  </span>
                 </a>
               </li>
               <li class="dropdown tasks-menu" title="Available battery level in %, read user manual for more info." style="width:14%">
@@ -52,7 +53,7 @@
                 <a id="currentDate" href="#"></a>
               </li>
               <li class="dropdown user user-menu" style="width:10%">
-                <a href="#" class="dropdown-toggle" data-toggle="dropdown"> <!-- data-toggle="control-sidebar"> -->
+                <a href="#" class="dropdown-toggle" data-toggle="dropdown">
 				<i class="fa fa-gears"></i></a>
 				<ul class="dropdown-menu">
                   <li class="user-header">
@@ -70,7 +71,7 @@
                       <a href="help.jsp" class="btn btn-default btn-flat"><i class="fa fa-info-circle"> Help</i></a>
                     </div>
                     <div class="pull-right">
-                      <a href="pumpConfiguration.jsp" class="btn btn-default btn-flat"><i class="fa fa-gear"> Configurations</i></a>
+                      <a href="patientEditProfile.jsp" class="btn btn-default btn-flat"><i class="fa fa-edit"> Profile</i></a>
                     </div>
                   </li>
                 </ul>
@@ -201,325 +202,322 @@
     <script type="text/javascript" src="${pageContext.request.contextPath}/pumpLayout/plugins/wizard/easyWizard.js"></script>
     <script type="text/javascript" src="${pageContext.request.contextPath}/pumpLayout/dist/js/commonMethods.js"></script>
 	<script type="text/javascript">
-
-	var chart;
+		
+	  	var chart;
+	  	
+	  	document.getElementById("currentDate").innerHTML = '<small style="font-weight:bold; font-size:13px;">' + getDateTime(0, true, false) + '</small>';
+		document.getElementById("currentTime").innerHTML = '<large style="font-weight:bold; font-size:24px;">' + getDateTime(0, false, true)+ '</large>';
+		
+		updateNeedleTitle(0);
+		
+      $(function () {
+		
+    	$("#needleWizard").wizard();
+	    $("#reserviorWizard").wizard();
+    	var limit = 100;
+    	var injectionTriggered = 0;
+  		var y = 0;
+  		var data = [];
+  		var dataSeries = { type: "line", lineColor:"blue", xValueType:"string", name: "Blood Glucose : 90", showInLegend: true};
+  		var dataSeriesUpper = { type: "line", lineColor:"green", xValueType:"string", name: "Safe band uper limit", showInLegend: false};
+  		var dataSeriesLower = { type: "line", lineColor:"green", xValueType:"string", name: "Safe band lower limit", showInLegend: false};
+  		var bloodGlucoseUnsafeAlert = new Audio("./../dist/sound/Windows Battery Critical.wav");
+  		var glucoseData = sessionStorage.getItem("glucoseData");
+  		var dataPoints = [];
+  		var dataPointsUpper = [];
+  		var dataPointsLower = [];
+  		
+  		dataSeriesUpper.dataPoints = dataPointsUpper;
+  		dataSeriesLower.dataPoints = dataPointsLower;
+  		dataSeries.dataPoints = dataPoints;
+  		dataPointsUpper.push({x: 0, y: 120});
+  		dataPoints.push({x: 0, y: 90});
+  		dataPointsLower.push({x: 0, y: 70});
+  		
+  		//data.push(dataSeriesUpper);
+  		data.push(dataSeries);
+  		//data.push(dataSeriesLower);
+	
+	  	function generateBloodGlucose(updateData){
+	  		$.ajax({
+	  	        url: './../../glucoseSimulator',
+	  	      data : {
+	  	    	glucoseSeeker : true
+	  			},
+	  	        success: function(data) {
+	  	        	if(data != "" && data != null)
+	  	        	{
+	  	        		updateData(JSON.stringify(data));
+	  	        	}
+	  	        }
+	  	    });
+	      }
   	
-	document.getElementById("currentDate").innerHTML = '<small style="font-weight:bold; font-size:13px;">' + getDateTime(0, true, false) + '</small>';
-	document.getElementById("currentTime").innerHTML = '<large style="font-weight:bold; font-size:24px;">' + getDateTime(0, false, true)+ '</large>';
-	
-	updateNeedleTitle(0);
-	
-  $(function () {
-	
-	$("#needleWizard").wizard();
-    $("#reserviorWizard").wizard();
-	var limit = 100;
-	var injectionTriggered = 0;
-		var y = 0;
-		var data = [];
-		var dataSeries = { type: "line", lineColor:"blue", xValueType:"string", name: "Blood Glucose : 90", showInLegend: true};
-		var dataSeriesUpper = { type: "line", lineColor:"green", xValueType:"string", name: "Safe band uper limit", showInLegend: false};
-		var dataSeriesLower = { type: "line", lineColor:"green", xValueType:"string", name: "Safe band lower limit", showInLegend: false};
-		var bloodGlucoseUnsafeAlert = new Audio("./../dist/sound/Windows Battery Critical.wav");
-		var glucoseData = sessionStorage.getItem("glucoseData");
-		var dataPoints = [];
-		var dataPointsUpper = [];
-		var dataPointsLower = [];
-		
-		dataSeriesUpper.dataPoints = dataPointsUpper;
-		dataSeriesLower.dataPoints = dataPointsLower;
-		dataSeries.dataPoints = dataPoints;
-		dataPointsUpper.push({x: 0, y: 120});
-		dataPoints.push({x: 0, y: 90});
-		dataPointsLower.push({x: 0, y: 70});
-		
-		//data.push(dataSeriesUpper);
-		data.push(dataSeries);
-		//data.push(dataSeriesLower);
-
-  	function generateBloodGlucose(updateData){
-  		$.ajax({
-  	        url: './../../glucoseSimulator',
-  	      data : {
-  	    	glucoseSeeker : true
-  			},
-  	        success: function(data) {
-  	        	if(data != "")
-  	        	{
-  	        		updateData(JSON.stringify(data));
-  	        	}
-  	        }
-  	    });
-      }
-	
-  	var updateData = function(glucoseData)
-	{
-  		if(glucoseData != null && glucoseData != "")
-  		{
-  		glucoseData = glucoseData.replace(/['{]+/g, '');
-        glucoseData = glucoseData.replace(/['"]+/g, '');
-        glucoseData = glucoseData.replace(/['}]+/g, '');
-		var partedString = glucoseData.split(',');
-		var t, g, tEnd, gStart;
-		
-		if(partedString != null && partedString != "")
+	  	var updateData = function(glucoseData)
 		{
-			var gData = [];
+	  		if(glucoseData != null && glucoseData != "")
+	  		{
+      		glucoseData = glucoseData.replace(/['{]+/g, '');
+	        glucoseData = glucoseData.replace(/['"]+/g, '');
+	        glucoseData = glucoseData.replace(/['}]+/g, '');
+			var partedString = glucoseData.split(',');
+			var t, g, tEnd, gStart;
 			
-			for(var i = 0; i < partedString.length; i++)
-				{
-					tEnd = partedString[i].lastIndexOf(':');
-					gStart = tEnd + 1;
-					t = partedString[i].substr(0, tEnd);
-					g = partedString[i].substr(gStart,partedString[i].length);
-					g = parseFloat(parseFloat(g).toFixed(2));
-					if(g > 120 || g < 70)
+			if(partedString != null && partedString != "")
+			{
+				var gData = [];
+				
+				for(var i = 0; i < partedString.length; i++)
 					{
-						bloodGlucoseUnsafeAlert.play();	
-						chart.options.theme = "dark1";
-						chart.data[0].options.lineColor = "red";
-					}
-					else
+						tEnd = partedString[i].lastIndexOf(':');
+						gStart = tEnd + 1;
+						t = partedString[i].substr(0, tEnd);
+						g = partedString[i].substr(gStart,partedString[i].length);
+						g = parseFloat(parseFloat(g).toFixed(2));
+						
+						if(g > 120 || g < 85)
 						{
-						chart.options.theme = "light1";
-						chart.data[0].options.lineColor = "blue";
+							bloodGlucoseUnsafeAlert.play();	
+							chart.options.theme = "dark1";
+							chart.data[0].options.lineColor = "red";
 						}
-					gData.push({x: t, y: g});
-					//dataPoints.push({x: t, y: parseInt(g)});
-				}
-				if(gData.length > 0)
-				{
-					dataSeries.dataPoints = gData;
-					chart.data[0].options.name = "Blood Glucose : "+ g;
-					chart.options.axisX.viewportMinimum = 0;//t-20;
-		  			chart.options.axisX.viewportMaximum = t;
-		  			chart.render();
-		  			parent.iframe2.contentWindow.updateReserviorInsulinConsumed();
+						else
+							{
+							chart.options.theme = "light1";
+							chart.data[0].options.lineColor = "blue";
+							}
+						gData.push({x: t, y: g});
+						//dataPoints.push({x: t, y: parseInt(g)});
+					}
+					if(gData.length > 0)
+					{
+						dataSeries.dataPoints = gData;
+						chart.data[0].options.name = "Blood Glucose : "+ g;
+						chart.options.axisX.viewportMinimum = 0;//t-20;
+			  			chart.options.axisX.viewportMaximum = t;
+			  			chart.render();
+			  			parent.iframe2.contentWindow.updateReserviorInsulinConsumed();
+					}
 				}
 			}
 		}
-	}
-  	
-		var interval = setInterval(function(){
-			generateBloodGlucose(updateData);
-		}, 1000);
-		
-	  chart = new CanvasJS.Chart("bloodGlucoseGraph", {
-			animationEnabled: true,
-			zoomEnabled: true,
-			panEnabled: true,
-			exportFileName: "patientGlucoseReport",
-			exportEnabled: false,
-			title:{
-				text: "" 
-			},
-			legend: {
-				cursor: "pointer",
-				verticalAlign: "top",
-				horizontalAlign: "center",
-				dockInsidePlotArea: true,
-				itemclick: true
-			},
-			axisX :{
-				title: "Time(S)",
-				titleFontSize : 12,
-				valueFormatString: "#",
-				minimum: 0,
-  				viewportMinimum: 0,
-  		        viewportMaximum: 50
-  		      	/* labelFormatter: function (e) {
-  				return CanvasJS.formatDate( e.value, "HH:mm:ss");
-  				}, */
-  			},
-			axisY :{
-				includeZero:false,
-				titleFontSize : 12,
-				title: "Blood Glucose(mg/dl)"
-			},
-			data: data
-		});
-	  $('.canvasjs-chart-credit').hide();
-	  chart.render();
-	  
-	  if(glucoseData != "")
-		{
-			updateData(glucoseData);
-		}
-		
-	 
-	  function toggleManualMode(value)
- 	 {
- 		if(value=="false")
-			{
-				//$('#manualModeOnBtn').hide();
-				$('#manualModeOnBtn').attr("disabled", "disabled");
-			}
-	 		else{
-	 			//$('#manualModeOnBtn').show();
-	 			$('#manualModeOnBtn').removeAttr("disabled");
-	 		}
- 	 }
-	  
-	  $('#carbIntake').focusout(function() {
-      	if($(this).val() != "" && !$.isNumeric($(this).val()))
-      	{
-      		$(this).val('');
-      		$(this).focus();
-      	}
-      	if($(this).val() != ""){
-      		$('#carbIntakeBtn').prop("disabled", false);
-      	}
-      	else{
-      		$('#carbIntakeBtn').prop("disabled", true);
-      	}
-      });
-      
-      $('#insulinIntake').focusout(function() {
-      	if($(this).val() != "" && !$.isNumeric($(this).val()))
-      	{
-      		$(this).val('');
-      		$(this).focus();
-      	}
-      	if($(this).val() != ""){
-      		$('#insulinIntakeBtn').prop("disabled", false);
-      	}
-      	else{
-      		$('#insulinIntakeBtn').prop("disabled", true);
-      	}
-      });
-	  
-      $('#carbIntakeBtn').click(function(){
-    	  var carbIntakeUnits = $('#carbIntake').val();
-    	  if(carbIntakeUnits != null || carbIntakeUnits != "")
-    	  {
-    		  $.ajax({
-    			type: "POST",
-  	  			url : './../../glucoseSimulator',
-  	  			data : {
-  	  				carbIntakeCommit: true,
-  	  				carbIntakeUnits: carbIntakeUnits
-  	  			},
-  	  			success : function(result) {
-  	  			$('#carbIntake').val("");
-  	  			$('#carbIntakeBtn').prop("disabled", true);
-  	  			}
-  	  		}); 
-    	  }
-      });
-      
-      $('#insulinIntakeBtn').click(function(){
-    	  var insulinUnitsToConsumeVal = $('#insulinIntake').val();
-    	  if(insulinUnitsToConsume != null || insulinUnitsToConsume != "")
-    	  {
-    		  $.ajax({
-    			type: "POST",
-  	  			url : './../../commonController',
-  	  			data : {
-  	  			insulinUnitsToConsume: true,
-  	  			insulinUnitsToConsumeValue: insulinUnitsToConsumeVal
-  	  			},
-  	  			success : function(result) {
-  	  			$('#insulinIntake').val("");
-  	  			$('#insulinIntakeBtn').prop("disabled", true);
-  	  			}
-  	  		}); 
-    	  }
-      });
-      
-	  $("#patientManualModeAccess").change(function() {
-		  toggleManualMode($(this).val());
-		});
-     
-	 toggleManualMode($("#patientManualModeAccess").val());
-	 
-	 alterBatteryIcon();
-	 
-	 if(parent.devframeR.document.getElementById('chargeLeftInput').value != "")
-	 {
-		 var batteryLeftPercentage = parseInt(parent.devframeR.document.getElementById('chargeLeftInput').value);
-    	 $('#batteryLeft').html(batteryLeftPercentage + "%");
-	 }
-	 
-	 if(parent.devframeR.document.getElementById('reserviorLeftInput').value != "")
-	 {
-		 var reserviorLeftPercentage = parseInt(parent.devframeR.document.getElementById('reserviorLeftInput').value);
-    	 $('#reserviorAlert').html(reserviorLeftPercentage);
-	 }
-	 
-	 var reserviorLevelValue = "";
-	 
-	 $('#reserviorAlert').on('DOMSubtreeModified',function(){
-			if(reserviorLevelValue != $('#reserviorAlert').html() && $('#reserviorAlert').html() != "" && $('#reserviorAlert').html() != null && $('#reserviorAlert').html() != "!")
-			{
-				reserviorLevelValue = $('#reserviorAlert').html();
-				alterReserviorIcon();	
-			}
-		});
-	 
-	 $('#batteryLeft').on('DOMSubtreeModified',function(){
-		 alterBatteryIcon();
-		});
-	 
-	 //Manual mode TOGGLE
-    $("#ManualMode .btn").click(function () {
-    	var manualMode = false;
-      if ($(this).data("toggle") === "on") {
-    	  manualMode = true;
-    	  $('#bloodGlucoseGraph').height("325px");
-    	  $('#injectBtn').show();
+	  	
+  		var interval = setInterval(function(){
+  			generateBloodGlucose(updateData);
+  		}, 1000);
+  		
+    	  chart = new CanvasJS.Chart("bloodGlucoseGraph", {
+    			animationEnabled: true,
+    			zoomEnabled: true,
+    			panEnabled: true,
+    			exportFileName: "patientGlucoseReport",
+    			exportEnabled: false,
+    			title:{
+    				text: "" 
+    			},
+    			legend: {
+    				cursor: "pointer",
+    				verticalAlign: "top",
+    				horizontalAlign: "center",
+    				dockInsidePlotArea: true,
+    				itemclick: true
+    			},
+    			axisX :{
+    				title: "Time(S)",
+    				titleFontSize : 12,
+    				valueFormatString: "#",
+    				minimum: 0,
+      				viewportMinimum: 0,
+      		        viewportMaximum: 50
+      		      	/* labelFormatter: function (e) {
+      				return CanvasJS.formatDate( e.value, "HH:mm:ss");
+      				}, */
+      			},
+    			axisY :{
+    				includeZero:false,
+    				titleFontSize : 12,
+    				title: "Blood Glucose(mg/dl)"
+    			},
+    			data: data
+    		});
+    	  $('.canvasjs-chart-credit').hide();
     	  chart.render();
-      }
-      else {
-    	  manualMode = false;
-    	  $('#injectBtn').hide();
-    	  $('#bloodGlucoseGraph').height("365px");
-    	  chart.render();
-      }
+    	  
+    	  if(glucoseData != null && glucoseData != "")
+    		{
+    			updateData(glucoseData);
+    		}
+    		
+    	 
+    	  function toggleManualMode(value)
+     	 {
+     		if(value=="false")
+  			{
+  				//$('#manualModeOnBtn').hide();
+  				$('#manualModeOnBtn').attr("disabled", "disabled");
+  			}
+ 	 		else{
+ 	 			//$('#manualModeOnBtn').show();
+ 	 			$('#manualModeOnBtn').removeAttr("disabled");
+ 	 		}
+     	 }
+    	  
+    	  $('#carbIntake').focusout(function() {
+          	if($(this).val() != "" && !$.isNumeric($(this).val()))
+          	{
+          		$(this).val('');
+          		$(this).focus();
+          	}
+          	if($(this).val() != ""){
+          		$('#carbIntakeBtn').prop("disabled", false);
+          	}
+          	else{
+          		$('#carbIntakeBtn').prop("disabled", true);
+          	}
+          });
+          
+          $('#insulinIntake').focusout(function() {
+          	if($(this).val() != "" && !$.isNumeric($(this).val()))
+          	{
+          		$(this).val('');
+          		$(this).focus();
+          	}
+          	if($(this).val() != ""){
+          		$('#insulinIntakeBtn').prop("disabled", false);
+          	}
+          	else{
+          		$('#insulinIntakeBtn').prop("disabled", true);
+          	}
+          });
+    	  
+          $('#carbIntakeBtn').click(function(){
+        	  var carbIntakeUnits = $('#carbIntake').val();
+        	  if(carbIntakeUnits != null || carbIntakeUnits != "")
+        	  {
+        		  $.ajax({
+        			type: "POST",
+      	  			url : './../../glucoseSimulator',
+      	  			data : {
+      	  				carbIntakeCommit: true,
+      	  				carbIntakeUnits: carbIntakeUnits
+      	  			},
+      	  			success : function(result) {
+      	  			$('#carbIntake').val("");
+      	  			$('#carbIntakeBtn').prop("disabled", true);
+      	  			}
+      	  		}); 
+        	  }
+          });
+          
+          $('#insulinIntakeBtn').click(function(){
+        	  var insulinUnitsToConsumeVal = $('#insulinIntake').val();
+        	  if(insulinUnitsToConsume != null || insulinUnitsToConsume != "")
+        	  {
+        		  $.ajax({
+        			type: "POST",
+      	  			url : './../../commonController',
+      	  			data : {
+      	  			insulinUnitsToConsume: true,
+      	  			insulinUnitsToConsumeValue: insulinUnitsToConsumeVal
+      	  			},
+      	  			success : function(result) {
+      	  			$('#insulinIntake').val("");
+      	  			$('#insulinIntakeBtn').prop("disabled", true);
+      	  			}
+      	  		}); 
+        	  }
+          });
+          
+    	  $("#patientManualModeAccess").change(function() {
+    		  toggleManualMode($(this).val());
+    		});
+         
+    	 toggleManualMode($("#patientManualModeAccess").val());
+    	 
+    	 alterBatteryIcon();
+    	 
+    	 if(parent.devframeR.document.getElementById('chargeLeftInput').value != "")
+    	 {
+    		 var batteryLeftPercentage = parseInt(parent.devframeR.document.getElementById('chargeLeftInput').value);
+        	 $('#batteryLeft').html(batteryLeftPercentage + "%");
+    	 }
+    	 
+    	 if(parent.devframeR.document.getElementById('reserviorLeftInput').value != "")
+    	 {
+    		 var reserviorLeftPercentage = parseInt(parent.devframeR.document.getElementById('reserviorLeftInput').value);
+        	 $('#reserviorAlert').html(reserviorLeftPercentage);
+    	 }
+    	 
+    	 var reserviorLevelValue = "";
+    	 
+    	 $('#reserviorAlertVal').on('DOMSubtreeModified',function(){
+    		alterReserviorIcon();
+    		});
+    	 
+    	 $('#batteryLeft').on('DOMSubtreeModified',function(){
+    		 alterBatteryIcon();
+    		});
+    	 
+    	//Manual mode TOGGLE
+    	    $("#ManualMode .btn").click(function () {
+    	    	var manualMode = false;
+    	      if ($(this).data("toggle") === "on") {
+    	    	  manualMode = true;
+    	    	  $('#bloodGlucoseGraph').height("325px");
+    	    	  $('#injectBtn').show();
+    	    	  chart.render();
+    	      }
+    	      else {
+    	    	  manualMode = false;
+    	    	  $('#injectBtn').hide();
+    	    	  $('#bloodGlucoseGraph').height("365px");
+    	    	  chart.render();
+    	      }
+    	      $.ajax({
+    				type: "POST",
+    	  			url : './../../commonController',
+    	  			data : {
+    	  				operationModeToggle: true,
+    	  				isManualModeOn: manualMode
+    	  			},
+    	  			success : function(result) {
+    	  			}
+    	  		}); 
+    	    });
+      });
+      
       $.ajax({
 			type: "POST",
-  			url : './../../commonController',
-  			data : {
-  				operationModeToggle: true,
-  				isManualModeOn: manualMode
-  			},
-  			success : function(result) {
-  			}
-  		}); 
-    });
-    
-    $.ajax({
-		type: "POST",
-  			url : './../../commonController',
-  			data : {
-  				manualModeSeeker: true
-  			},
-  			success : function(result) {
-  				if(result=="true")
-  				{
-  				  $('#bloodGlucoseGraph').height("325px");
-  	        	  $('#injectBtn').show();
-  	        	  chart.render();
-  				}
-  				else{
-  				  $('#injectBtn').hide();
-  	        	  $('#bloodGlucoseGraph').height("365px");
-  	        	  chart.render();
-  				}
-  			}
-  		});
-  });
-  
-  if($('.modal-dialog') != null)
-  {
-    $('.modal-dialog').css("margin-top", "100px");	  
-  }
+	  			url : './../../commonController',
+	  			data : {
+	  				manualModeSeeker: true
+	  			},
+	  			success : function(result) {
+	  				if(result=="true")
+	  				{
+	  				  $('#bloodGlucoseGraph').height("325px");
+	  	        	  $('#injectBtn').show();
+	  	        	  chart.render();
+	  				}
+	  				else{
+	  				  $('#injectBtn').hide();
+	  	        	  $('#bloodGlucoseGraph').height("365px");
+	  	        	  chart.render();
+	  				}
+	  			}
+	  		}); 
       
-  function labelFormatter(label, series) {
-    return "<div style='font-size:13px; text-align:center; padding:2px; color: #fff; font-weight: 600;'>"
-            + label
-            + "<br/>"
-            + Math.round(series.percent) + "%</div>";
-  }
+      if($('.modal-dialog') != null)
+      {
+        $('.modal-dialog').css("margin-top", "100px");	  
+      }
+          
+      function labelFormatter(label, series) {
+        return "<div style='font-size:13px; text-align:center; padding:2px; color: #fff; font-weight: 600;'>"
+                + label
+                + "<br/>"
+                + Math.round(series.percent) + "%</div>";
+      }
     </script>
 </body>
 </html>

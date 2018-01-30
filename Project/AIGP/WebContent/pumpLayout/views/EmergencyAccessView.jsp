@@ -246,16 +246,7 @@
 					t = partedString[i].substr(0, tEnd);
 					g = partedString[i].substr(gStart,partedString[i].length);
 					g = parseFloat(parseFloat(g).toFixed(2));
-					if(g < gOld && injectionTriggered == 0)
-					{
-						parent.iframe2.contentWindow.updateReserviorInsulinConsumed();
-						injectionTriggered = 1;
-					}
-					if(g > gOld && injectionTriggered==1)
-					{
-						injectionTriggered = 0;
-					}
-					if(g > 120 || g < 85)
+					if(g > 120 || g < 70)
 					{
 						bloodGlucoseUnsafeAlert.play();	
 						chart.options.theme = "dark1";
@@ -266,7 +257,6 @@
 						chart.options.theme = "light1";
 						chart.data[0].options.lineColor = "blue";
 						}
-					gOld = g;
 					gData.push({x: t, y: g});
 					//dataPoints.push({x: t, y: parseInt(g)});
 				}
@@ -277,6 +267,7 @@
 					chart.options.axisX.viewportMinimum = 0;//t-20;
 		  			chart.options.axisX.viewportMaximum = t;
 		  			chart.render();
+		  			parent.iframe2.contentWindow.updateReserviorInsulinConsumed();
 				}
 			}
 		}
